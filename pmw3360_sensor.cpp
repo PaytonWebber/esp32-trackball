@@ -61,7 +61,7 @@ void PMW3360_Sensor::srom_download() {
   SPI.transfer(SROM_LOAD_BURST | 0x80);
   delayMicroseconds(35);
   uint8_t d;
-  for (std::size_t i = 0; i < firmware_length; i++) {
+  for (std::size_t i = 0; i < firmware_length; ++i) {
     d = firmware_data[i];
     SPI.transfer(d);
     delayMicroseconds(35);
@@ -82,6 +82,34 @@ bool PMW3360_Sensor::has_update() {
   spi_write(MOTION, 0x00);
   uint8_t motion = spi_read(MOTION);
   return (motion & 0x80);
+}
+
+BurstMotionReport PMW3360_Sensor::get_burst_update() {
+  uint8_t burst[12];
+
+  spi_write(MOTION_BURST, 0x00);
+
+  digitalWrite(NCS_PIN, LOW);
+  SPI.transfer(MOTION_BURST & 0x7F);
+
+  delayMicroseconds(35);
+
+  for (int i = 0; i < 12; ++i) {
+    burst[i] = SPI.transfer(0);
+  }
+
+  BurstMotionReport report;
+  report.motion = burst[0];
+  report.observation = burst[1];
+  report.delta_x = (int16_t)((burst[3] << 8) | burst[2]);
+  report.delta_y = (int16_t)((burst[5] << 8) | burst[4]);
+  report.squal = burst[6];
+  report.raw_sum = burst[7];
+  report.raw_max = burst[8];
+  report.raw_min = burst[9];
+  report.shutter = (uint16_t)((burst[10] << 8) | burst[11]);
+
+  return report;
 }
 
 MouseUpdate PMW3360_Sensor::get_update() {

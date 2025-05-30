@@ -67,6 +67,18 @@ struct MouseUpdate {
   int16_t dy;
 };
 
+struct BurstMotionReport {
+  uint8_t motion;
+  uint8_t observation;
+  int16_t delta_x;
+  int16_t delta_y;
+  uint8_t squal;
+  uint8_t raw_sum;
+  uint8_t raw_max;
+  uint8_t raw_min;
+  uint8_t shutter;
+};
+
 class PMW3360_Sensor {
 public:
   PMW3360_Sensor();
@@ -74,6 +86,7 @@ public:
   void power_up();
   void shutdown();
   bool has_update();
+  BurstMotionReport get_burst_update();
   MouseUpdate get_update();
 
 private:
